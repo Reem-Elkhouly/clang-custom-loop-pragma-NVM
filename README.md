@@ -1,9 +1,8 @@
 # Clang-Custom-Loop-Pragma-for-NVM
-# clang-custom-loop-pragma-NVM
 
-This is how to add a custom clang loop pragma directive.
+In this tutorial, we will go through how to add a custom clang loop pragma directive. In this implementation, we propose a loop pragma directive that marks a specific loop nest in the program. The information provided by the pragma will be attached as metadata to the outermost loop in the nest. According to the design of Clang (llvm-9.0.0 is used here), the metadata is actually attached to the back branch instruction in the loop that follows the pragma in the code. Our purpose is to use the programmer directive to help to insert instructions for the non-volatile main memory (NVM) data persistence. However, the same approach can be used to implement the pragma for any other purpose. To do that, we pass two pieces of information through the pragma; the name of the array that holds the critical data to be persisted and the specific loop to insert the instructions into marked by its induction variable.
 
-First, the keywords for the pragma clauses should be added to include/clang/Basic/Attr.td as [follows](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/a33747a2bb765be76190d0222865d71b9a1878ef/include/clang/Basic/Attr.td#L2954-L2972).
+First, the keywords for the pragma clauses should be added to [include/clang/Basic/Attr.td](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/a33747a2bb765be76190d0222865d71b9a1878ef/include/clang/Basic/Attr.td#L2954-L2972) as follows.
 
 
 
