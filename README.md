@@ -30,3 +30,17 @@ First, the keywords for the pragma clauses should be added to [include/clang/Bas
               ExprArgument<"Value">,
 	      ExprArgument<"ValueExtra">];///NVM
 ```
+
+include/clang/Parse/LoopHint.h
+
+include/clang/Parse/Parser.h dose not need any modifications because we use the existing loopHandler and we do not define any new handlers.
+
+
+/lib/Parse/ParsePragma.cpp
+
+
+/lib/Sema/SemaStmtAttr.cpp
+
+/lib/Sema/SemaTemplateInstantiate.cpp
+
+/lib/CodeGen/CGLoopInfo.cpp
