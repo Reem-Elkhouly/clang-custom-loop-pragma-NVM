@@ -530,6 +530,58 @@ CheckForIncompatibleAttributes(Sema &S,
   }
 }
 ```
-/lib/Sema/SemaTemplateInstantiate.cpp
+/lib/Sema/SemaTemplateInstantiate.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/c3a189a0ddc3c33994f63e79b4f56e29a7be04d0/lib/Sema/SemaTemplateInstantiate.cpp#L1255-L1257)
 
-/lib/CodeGen/CGLoopInfo.cpp
+```
+  return LoopHintAttr::CreateImplicit(
+      getSema().Context, LH->getSemanticSpelling(), LH->getOption(),
+      LH->getState(), TransformedExpr, nullptr, LH->getRange());///NVM
+```
+
+[/lib/CodeGen/CGLoopInfo.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/c3a189a0ddc3c33994f63e79b4f56e29a7be04d0/lib/CodeGen/CGLoopInfo.cpp#L1)
+here is where the metadata is written and attached as loop info.
+```
+MDNode *LoopInfo::createRecomputeMetadata(
+					const LoopAttributes &Attrs,
+					ArrayRef<Metadata *> LoopProperties,
+					bool &HasUserTransforms
+					){
+
+
+  LLVMContext &Ctx = Header->getContext();
+
+
+
+
+
+
+  
+  if (Attrs.StringExpr.empty())
+      return createFullUnrollMetadata(Attrs, LoopProperties, HasUserTransforms);
+
+
+  //////////////////The current implementation does not follow up
+  //////////////////with other transformations after persistence if found
+    
+  SmallVector<Metadata *, 4> Args;
+  TempMDTuple TempNode = MDNode::getTemporary(Ctx, None);
+  Args.push_back(TempNode.get());
+  Args.append(LoopProperties.begin(), LoopProperties.end());
+  
+
+
+  Metadata *Vals[] = {MDString::get(Ctx, "llvm.NVM.recompute.persist"),
+			  MDString::get(Ctx, Attrs.StringExpr)
+      };
+      Args.push_back(MDNode::get(Ctx, Vals));
+
+
+      
+  MDNode *LoopID = MDNode::getDistinct(Ctx, Args);
+  LoopID->replaceOperandWith(0, LoopID);
+  HasUserTransforms = true;
+  return LoopID;
+  
+}
+```
+other minor modifications to guarantee proper functionality.
