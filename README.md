@@ -31,9 +31,22 @@ First, the keywords for the pragma clauses should be added to [include/clang/Bas
 	      ExprArgument<"ValueExtra">];///NVM
 ```
 
-include/clang/Parse/LoopHint.h
+[include/clang/Parse/LoopHint.h](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/944cb6cef0728816dff734072889054ca72204f4/include/clang/Parse/LoopHint.h#L38-L40)
+```
+  ///NVM
+  Expr *ValueExprExtra;
+  StringRef PersistStr;
+```
+  
 
 include/clang/Parse/Parser.h dose not need any modifications because we use the existing loopHandler and we do not define any new handlers.
+[struct LoopHint](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/944cb6cef0728816dff734072889054ca72204f4/include/clang/Parse/Parser.h#L40)
+[handle method](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/944cb6cef0728816dff734072889054ca72204f4/include/clang/Parse/Parser.h#L730-L732)
+```
+  /// Handle the annotation token produced for
+  /// #pragma clang loop and #pragma unroll.
+  bool HandlePragmaLoopHint(LoopHint &Hint);
+```
 
 
 /lib/Parse/ParsePragma.cpp
