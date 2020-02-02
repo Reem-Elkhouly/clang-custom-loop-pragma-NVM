@@ -593,8 +593,7 @@ MDNode *LoopInfo::createRecomputeMetadata(
   
 }
 ```
-other minor modifications to guarantee proper functionality.
-
+Note that you will have to include the proper header files.
 
 By now the metadata is created, attached to the loop and will appear in the IR code as shown in the following example. These metadata should be read in the back end to make transformation and optimizaion decisions at code generation.
 
