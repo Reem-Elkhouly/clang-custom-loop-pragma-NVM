@@ -4,7 +4,17 @@ In this tutorial, we will go through how to add a custom clang loop pragma direc
 
 Through this tutorial, we assume that the reader already has some knowledge of the Calng and LLVM, if not please refer to the [LLVM Getting Started Docs](https://llvm.org/docs/GettingStarted.html). Adding a custom pragma is a much of work to do because the new keywords and the format of the clauses should be recognizable to the preprocessor. Then, the parser should be learned how to parse these newly introduced tokens. finally, the code generator should be modified to generate the metadata and attach them to the corresponding instructions in the IR. Of course, the program manipulation according to the custom pragma directive is a separate work to be done in an LLVM pass or a runtime library.
 
-First, the keywords for the pragma clauses should be added to [include/clang/Basic/Attr.td](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/a33747a2bb765be76190d0222865d71b9a1878ef/include/clang/Basic/Attr.td#L2954-L2972) as follows.
+Fortunately, Clang already implements loop pragmas such as unroll, vectorize, interleave, ... etc. These pragmas are defined through a LoopHint and they appear in the code in the following form for the unroll (that may take an integer parameter).
+```
+#pragma clang loop unroll
+```
+The custome pragma that we propose will have the following format
+```
+#pragma clang loop persist (c, ii)
+```
+Where c is the matrix name and ii is the specified loop induction variable. 
+
+As the loop pragma already exists in Clang, we do not have to implement a completely new Attribute; we will extend the existing one to include the custome pragma. First, the keywords for the pragma clauses should be added to [include/clang/Basic/Attr.td](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/a33747a2bb765be76190d0222865d71b9a1878ef/include/clang/Basic/Attr.td#L2954-L2972) as follows.
 
 
 
