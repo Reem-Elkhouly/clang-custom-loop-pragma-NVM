@@ -1,6 +1,6 @@
 # Clang-Custom-Loop-Pragma-for-NVM
 
-In this tutorial, we will go through how to add a custom clang loop pragma directive. In this implementation, we propose a loop pragma directive that marks a specific loop nest in the program. The information provided by the pragma will be attached as metadata to the outermost loop in the nest. According to the design of Clang (llvm-9.0.0 is used here), the metadata is actually attached to the back branch instruction in the IR of the loop that follows the pragma in the code. Our purpose is to use the programmer directive to help to insert instructions for the non-volatile main memory (NVM) data persistence. However, the same approach can be used to implement the pragma for any other purpose. To do that, we pass two pieces of information through the pragma; the name of the array that holds the critical data to be persisted and the specific loop to insert the instructions into marked by its induction variable. Please note that, according to your purpose, you may need only an ordinary pragma directive that attaches metadata to any instruction (not a loop pragma) then we recommend to read this [turorial](https://git.scc.kit.edu/CES/clang-custom-pragma).
+In this tutorial, we will go through how to add a custom clang loop pragma directive. In this implementation, we propose a loop pragma directive that marks a specific loop nest in the program for the pupose of this [research](https://dl.acm.org/doi/10.1145/3371236). The information provided by the pragma will be attached as metadata to the outermost loop in the nest. According to the design of Clang (llvm-9.0.0 is used here), the metadata is actually attached to the back branch instruction in the IR of the loop that follows the pragma in the code. Our purpose is to use the programmer directive to help to insert instructions for the non-volatile main memory (NVM) data persistence. However, the same approach can be used to implement the pragma for any other purpose. To do that, we pass two pieces of information through the pragma; the name of the array that holds the critical data to be persisted and the specific loop to insert the instructions into marked by its induction variable. Please note that, according to your purpose, you may need only an ordinary pragma directive that attaches metadata to any instruction (not a loop pragma) then we recommend to read this [turorial](https://git.scc.kit.edu/CES/clang-custom-pragma).
 
 Through this tutorial, we assume that the reader already has some knowledge of the Calng and LLVM, if not please refer to the [LLVM Getting Started Docs](https://llvm.org/docs/GettingStarted.html). Adding a custom pragma is a much of work to do because the new keywords and the format of the clauses should be recognizable to the preprocessor. Then, the parser should be learned how to parse these newly introduced tokens. finally, the code generator should be modified to generate the metadata and attach them to the corresponding instructions in the IR. Of course, the program manipulation according to the custom pragma directive is a separate work to be done in an LLVM pass or a runtime library.
 
@@ -598,14 +598,41 @@ other minor modifications to guarantee proper functionality.
 
 By now the metadata is created, attached to the loop and will appear in the IR code as shown in the following example. These metadata should be read in the back end to make transformation and optimizaion decisions at code generation.
 
-Example
+<<Example>>
 
-For the following C++ code
+For the following C code from tmm.c
 ```
+int tmm(){
+  double sum=0; int ii, jj, kk, i, j, k;
 
+  #pragma clang loop recompute (c ii)
+  for (kk=0; kk<SIZE; kk=kk+bsize){
+    for ( ii =0; ii <SIZE; ii=ii+bsize){
+      for ( jj =0; jj <SIZE; jj=jj+bsize){
+        for ( i =ii ; i <(ii+bsize); i=i+1){
+          for ( j=jj ; j<(jj+bsize); j=j+1)
+            {
+              sum = c[i ][ j ];
+              for (k=kk; k<(kk+bsize); k=k+1){
+                sum += a[i][k]*b[k ][ j ];
+              }
+              c[ i ][ j ] = sum;
+            } //end of j loop
+        }//end of i loop
+      }//end of jj loop
+      //HERE: insertion point
+    }//end of ii loop
+  }//end of kk loop
+
+  return 0;
+}
 ```
-
+The IR code can be generated using the command line
+```
+clang -C -emit-llvm tmm.c -o tmm.ll
+```
 The resulting IR code will  look like this. Where the metadata appears at the end of the file.
 ```
-
+!2 = distinct !{!2, !3}
+!3 = !{!"llvm.NVM.recompute.persist", !"c ii"}
 ```
