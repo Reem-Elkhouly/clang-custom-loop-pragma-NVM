@@ -10,7 +10,7 @@ Fortunately, Clang already implements loop pragmas such as unroll, vectorize, in
 ```
 The custome pragma that we propose will have the following format
 ```
-#pragma clang loop persist (c, ii)
+#pragma clang loop recompute (c ii)
 ```
 Where c is the matrix name and ii is the specified loop induction variable. 
 
@@ -60,6 +60,7 @@ include/clang/Parse/Parser.h dose not need any modifications because we use the 
   bool HandlePragmaLoopHint(LoopHint &Hint);
 ```
 
+The definition of the mothod that parse the LoopHint pragma can be found here:
 [Parse method](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/944cb6cef0728816dff734072889054ca72204f4/include/clang/Parse/Parser.h#L1957-L1960)
 ```
   StmtResult ParsePragmaLoopHint(StmtVector &Stmts,
@@ -68,6 +69,7 @@ include/clang/Parse/Parser.h dose not need any modifications because we use the 
                                  ParsedAttributesWithRange &Attrs);
 ```
 
+The newly introduced option of the pragma should be handled as follows, where the new code marked by ///NVM. All the extracted information from the pragma will be stored in the Hint struct.
 [/lib/Parse/ParsePragma.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/4f6791a62711dac1048007110c7fb1bac26b7700/lib/Parse/ParsePragma.cpp#L1008-L1185)
 ```
 static std::string PragmaLoopHintString(Token PragmaName, Token Option) {
@@ -270,7 +272,7 @@ bool Parser::HandlePragmaLoopHint(LoopHint &Hint) {
 }
 ```
 
-Some work ha to be done in 
+Some work has to be done in 
 [/lib/Sema/SemaStmtAttr.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/4f6791a62711dac1048007110c7fb1bac26b7700/lib/Sema/SemaStmtAttr.cpp#L1)
 to extend the existing pragma clang loop to accomodate the custom pragma representation. Because the new pragma contains two arguments instead of one as the existing loop pragmas, we need to tell the parser to look for an [additional token](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/4f6791a62711dac1048007110c7fb1bac26b7700/lib/Sema/SemaStmtAttr.cpp#L85).
 ```
@@ -540,7 +542,8 @@ CheckForIncompatibleAttributes(Sema &S,
   }
 }
 ```
-/lib/Sema/SemaTemplateInstantiate.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/c3a189a0ddc3c33994f63e79b4f56e29a7be04d0/lib/Sema/SemaTemplateInstantiate.cpp#L1255-L1257)
+The call to the CreateImplicit should be modified to accomodate the newly added parameters in
+[/lib/Sema/SemaTemplateInstantiate.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/c3a189a0ddc3c33994f63e79b4f56e29a7be04d0/lib/Sema/SemaTemplateInstantiate.cpp#L1255-L1257)
 
 ```
   return LoopHintAttr::CreateImplicit(
@@ -548,6 +551,7 @@ CheckForIncompatibleAttributes(Sema &S,
       LH->getState(), TransformedExpr, nullptr, LH->getRange());///NVM
 ```
 
+As the pragma was parced and handled, it is the time to start creating the metadata that to be attached to the specified loop.
 [/lib/CodeGen/CGLoopInfo.cpp](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/c3a189a0ddc3c33994f63e79b4f56e29a7be04d0/lib/CodeGen/CGLoopInfo.cpp#L1)
 here is where the metadata is written and attached as loop info.
 ```
@@ -560,12 +564,7 @@ MDNode *LoopInfo::createRecomputeMetadata(
 
   LLVMContext &Ctx = Header->getContext();
 
-
-
-
-
-
-  
+ 
   if (Attrs.StringExpr.empty())
       return createFullUnrollMetadata(Attrs, LoopProperties, HasUserTransforms);
 
@@ -595,3 +594,18 @@ MDNode *LoopInfo::createRecomputeMetadata(
 }
 ```
 other minor modifications to guarantee proper functionality.
+
+
+By now the metadata is created, attached to the loop and will appear in the IR code as shown in the following example. These metadata should be read in the back end to make transformation and optimizaion decisions at code generation.
+
+Example
+
+For the following C++ code
+```
+
+```
+
+The resulting IR code will  look like this. Where the metadata appears at the end of the file.
+```
+
+```
