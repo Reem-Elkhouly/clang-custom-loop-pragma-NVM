@@ -630,7 +630,7 @@ int tmm(){
 ```
 The IR code can be generated using the command line
 ```
-clang -C -emit-llvm tmm.c -o tmm.ll
+clang -S -emit-llvm tmm.c -o tmm.ll
 ```
 The resulting IR code will  look like this. Where the metadata appears at the end of the file.
 ```
