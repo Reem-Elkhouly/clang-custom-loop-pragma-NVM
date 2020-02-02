@@ -598,7 +598,8 @@ other minor modifications to guarantee proper functionality.
 
 By now the metadata is created, attached to the loop and will appear in the IR code as shown in the following example. These metadata should be read in the back end to make transformation and optimizaion decisions at code generation.
 
-<<Example>>
+
+###Example
 
 For the following C code from tmm.c
 ```
