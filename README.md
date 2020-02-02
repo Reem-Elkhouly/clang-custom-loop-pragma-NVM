@@ -600,7 +600,7 @@ By now the metadata is created, attached to the loop and will appear in the IR c
 
 ###Example
 
-For the following C code from tmm.c
+For the following C code from [tmm.c](https://github.com/Reem-Elkhouly/clang-custom-loop-pragma-NVM/blob/52031e5e8f55475a7dc21d4a622efc62508f0bfb/tmm.c#L1)
 ```
 int tmm(){
   double sum=0; int ii, jj, kk, i, j, k;
